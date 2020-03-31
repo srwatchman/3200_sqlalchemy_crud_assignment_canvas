@@ -5,10 +5,61 @@ app.config.from_pyfile('config.cfg')
 db = SQLAlchemy(app)
 
 
-# TODO Define the data-models
-# Create models (e.g. classes) for all of your tables.
-# Start with creating the Student and StudentNickName Models
-# Later, you can add the Course and StudentCourses Models 
+# Below are the models (e.g. classes) for all of your tables.
+
+class Course(db.Model):
+    __tablename__ = 'courses'
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(50), unique=True)
+    # Define the relationship to Student via StudentCourses
+    students = db.relationship('Student', secondary='student_courses')
+
+    def __str__(self):
+        students = "["
+        for stud in self.students:
+            students = students + stud.name + ','
+        students = students + "]"
+        string_object = str(self.id) + "|" + str(self.name) +"|" + students
+        return string_object
+
+class StudentCourses(db.Model):
+    __tablename__ = 'student_courses'
+    id = db.Column(db.Integer(), primary_key=True)
+    course_id = db.Column(db.Integer(), db.ForeignKey('courses.id', ondelete='CASCADE'))
+    student_id = db.Column(db.Integer(), db.ForeignKey('student.id', ondelete='CASCADE'))
+
+class Student(db.Model):
+    __tablename__ = 'student'
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(50), unique=True)
+    email = db.Column(db.String(50), unique=True)
+    age = db.Column(db.Integer())
+    student_nick_names = db.relationship("StudentNickName", backref='student', cascade='all')
+
+    # Define the relationship to Course via StudentCourses
+    courses = db.relationship('Course', secondary='student_courses')
+
+    def __str__(self):
+        nick_names = "["
+        for nick in self.student_nick_names:
+            nick_names = nick_names + nick.nick_name + ','
+        nick_names = nick_names + "]"
+        courses = "["
+        for course in self.courses:
+            courses = courses + course.name + ','
+        courses = courses + "]"
+        string_object = str(self.id) + "|" + str(self.name) +"|" + str(self.email) + "|" + str(self.age) + "|" + nick_names + "|" + courses
+        return string_object
+
+class StudentNickName(db.Model):
+    __tablename__ = 'student_nick_name'
+    id = db.Column(db.Integer(), primary_key=True)
+    nick_name = db.Column(db.String(50), unique=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('student.id', ondelete='CASCADE'))
+
+    def __str__(self):
+        string_object = nick_name
+        return string_object
 
 @app.route('/')
 def home_page():
