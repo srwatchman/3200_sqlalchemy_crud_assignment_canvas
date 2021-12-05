@@ -67,6 +67,7 @@ def home_page():
 
 @app.route('/create_all')
 def create_all():
+    db.create_all()
     # TODO create the db
     message = "DB Created! (A SQLite DB File Should Appear In Your Project Folder.  " \
               "Also, if changes are made to the model, running this again should " \
@@ -75,12 +76,23 @@ def create_all():
 
 @app.route('/drop_all')
 def drop_all():
+    db.drop_all()
     # TODO drop the db
     message = "DB Dropped!!"
     return render_template('index.html', message=message)
 
 @app.route('/add_students')
 def add_students():
+    joe = Student(name='Joe',email='joe@weber.edu',age=21)
+    db.session.add(joe)
+    db.session.commit()
+
+    mary = Student(name='Mary',email='mary@weber.edu', age=22)
+    nickname_1 = StudentNickName(nick_name='Maria')
+    mary.student_nick_names.append(nickname_1)
+    db.session.add(mary)
+    db.session.commit()
+
     # TODO add two students to the DB with the following attributes:
     # name='Joe',email="joe@weber.edu",age=21
     # name='Mary', email="mary@weber.edu", age=22 | Mary's nickname: Maria
@@ -90,12 +102,25 @@ def add_students():
 
 @app.route('/add_nicknames_to_student')
 def add_nicknames_to_student():
+    joe = Student.query.filter(Student.email == 'joe@weber.edu').first()
+    print(joe.name)
+    jojo = StudentNickName(nick_name='Jojo')
+    joey = StudentNickName(nick_name='Joey')
+    joe.student_nick_names.append(jojo)
+    joe.student_nick_names.append(joey)
+    db.session.add(joe)
+    db.session.commit()
+
     # TODO associate the nicknames Jojo and Joey to Joe 
-    message = "Two nicknames (Joe and Joey) added to Joe"
+    message = "Two nicknames (Jojo and Joey) added to Joe"
     return render_template('index.html', message=message)
 
 @app.route('/update_student')
 def update_student():
+    joe = Student.query.filter(Student.email == 'joe@weber.edu').first()
+    joe.name = 'Joseph'
+    db.session.add(joe)
+    db.session.commit()  
     # TODO: change Joe's name to Joseph
     message = "Student Joe Updated"
     return render_template('index.html', message=message)
@@ -103,19 +128,31 @@ def update_student():
 
 @app.route('/select_student')
 def select_student():
+    joe = Student.query.filter(Student.email == 'joe@weber.edu').first()
+
+    
     # TODO: Retrieve the student with the email "joe@weber.edu" and display his name, email and nicknames 
-    message = "Query Results:<br> " 
+    message = f"Query Results:<br> {joe} "
     return render_template('index.html', message=message)
 
 @app.route('/select_students')
 def select_students():
+    students = Student.query.all()
+    students = Student.query.order_by(Student.email.desc())
+    query_results = ''
+    for x in students:
+        query_results = query_results + str(x) + "<br>"
+
     # TODO: Retrieve all the students and display their names, nicknames (and later their enrollments) 
 
-    message = "Query Results: <br>" 
+    message = "Query Results: <br>" + query_results 
     return render_template('index.html', message=message)
 
 @app.route('/delete_student')
 def delete_student():
+    joe = Student.query.filter(Student.email == 'joe@weber.edu').first()
+    db.session.delete(joe)
+    db.session.commit()
     # TODO: Delete Joe and his associated info from the DB
     message = "Joe deleted from DB"
     return render_template('index.html', message=message)
